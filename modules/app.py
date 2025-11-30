@@ -21,14 +21,10 @@ class MacroApp:
         
         # 트레이 아이콘 초기화
         self.tray = TrayIcon(self.on_exit)
-        
-        # 종료 플래그
-        self.should_exit = False
     
     def on_exit(self):
         """프로그램 종료"""
         print("종료 신호 수신...")
-        self.should_exit = True
         self.handler.shutdown()
     
     def load_config(self, config):
@@ -64,13 +60,6 @@ class MacroApp:
                 self.handler.handle_release,
                 suppress=True
             )
-        
-        # ESC 키 후킹 (입력 허용)
-        keyboard.on_press_key(
-            'esc',
-            self.handler.handle_press,
-            suppress=False
-        )
     
     def run(self):
         """애플리케이션 실행"""
@@ -80,8 +69,16 @@ class MacroApp:
         # 키보드 후킹 설정
         self.setup_hooks()
         
-        print("매크로 프로그램이 실행 중입니다...")
-        print("ESC 키를 누르거나 트레이 아이콘에서 '종료'를 선택하세요.")
+        print("========================================")
+        print("게임 매크로가 실행 중입니다!")
+        print("========================================")
+        print()
+        print("종료 방법:")
+        print("  - 작업표시줄 오른쪽 하단 숨겨진 아이콘")
+        print("  - 녹색 원 아이콘 우클릭")
+        print("  - '종료' 선택")
+        print()
+        print("========================================")
         
         # 이벤트 대기
         keyboard.wait()

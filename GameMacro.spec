@@ -1,23 +1,12 @@
 # -*- mode: python ; coding: utf-8 -*-
-from PyInstaller.utils.hooks import collect_all
-
-datas = [('modules/app.py', 'modules'), ('modules/core.py', 'modules'), ('modules/handler.py', 'modules'), ('modules/tray.py', 'modules'), ('config.py', '.')]
-binaries = []
-hiddenimports = ['config', 'keyboard', 'pystray', 'PIL', 'PIL.Image', 'PIL.ImageDraw']
-tmp_ret = collect_all('keyboard')
-datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
-tmp_ret = collect_all('pystray')
-datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
-tmp_ret = collect_all('PIL')
-datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 
 a = Analysis(
     ['main.py'],
     pathex=[],
-    binaries=binaries,
-    datas=datas,
-    hiddenimports=hiddenimports,
+    binaries=[],
+    datas=[('config.py', '.'), ('modules', 'modules'), ('icon.ico', '.')],
+    hiddenimports=['keyboard', 'pystray', 'PIL', 'PIL.Image', 'PIL.ImageDraw'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -48,4 +37,5 @@ exe = EXE(
     entitlements_file=None,
     uac_admin=True,
     icon=['icon.ico'],
+    manifest='GameMacro.manifest',
 )

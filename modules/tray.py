@@ -2,7 +2,7 @@ import sys
 import os
 import threading
 from pystray import Icon, Menu, MenuItem
-from PIL import Image, ImageDraw
+from PIL import Image
 
 class TrayIcon:
     """시스템 트레이 아이콘 관리"""
@@ -16,8 +16,44 @@ class TrayIcon:
         self.icon = None
         self.running = True
     
-    def create_image(self):
-        """트레이 아이콘 이미지 생성"""
+    def load_icon_image(self):
+        """icon.ico 파일 로드 또는 기본 이미지 생성"""
+        # 실행 파일 경로 또는 스크립트 경로 확인
+        if getattr(sys, 'frozen', False):
+            # PyInstaller로 빌드된 경우
+            base_path = sys._MEIPASS
+        else:
+            # 일반 Python 스크립트
+            base_path = os.path.dirname(os.path.abspath(__file__))
+        
+        # icon.ico 파일 경로
+        icon_path = os.path.join(base_path, 'icon.ico')
+        
+        # 상위 폴더에서도 확인 (modules 폴더 안에 있는 경우)
+        if not os.path.exists(icon_path):
+            parent_path = os.path.dirname(base_path)
+            icon_path = os.path.join(parent_path, 'icon.ico')
+        
+        try:
+            # icon.ico 파일이 있으면 로드
+            if os.path.exists(icon_path):
+                print(f"아이콘 파일 로드: {icon_path}")
+                image = Image.open(icon_path)
+                # 트레이 아이콘 크기로 리사이즈 (64x64)
+                image = image.resize((64, 64), Image.Resampling.LANCZOS)
+                return image
+            else:
+                print("icon.ico 파일을 찾을 수 없습니다. 기본 아이콘을 사용합니다.")
+                return self.create_default_image()
+        except Exception as e:
+            print(f"아이콘 로드 실패: {e}")
+            print("기본 아이콘을 사용합니다.")
+            return self.create_default_image()
+    
+    def create_default_image(self):
+        """기본 트레이 아이콘 이미지 생성 (icon.ico가 없을 때)"""
+        from PIL import ImageDraw
+        
         # 64x64 아이콘 생성
         width = 64
         height = 64
@@ -50,7 +86,7 @@ class TrayIcon:
     def create_menu(self):
         """트레이 메뉴 생성"""
         return Menu(
-            MenuItem('매크로 실행 중', lambda: None, enabled=False),
+            MenuItem('GTA 매크로 실행 중', lambda: None, enabled=False),
             MenuItem('종료', self.on_quit)
         )
     
@@ -58,8 +94,8 @@ class TrayIcon:
         """트레이 아이콘 실행"""
         self.icon = Icon(
             "GameMacro",
-            self.create_image(),
-            "게임 매크로 (실행 중)",
+            self.load_icon_image(),
+            "GTA 게임 매크로 (실행 중)",
             self.create_menu()
         )
         
