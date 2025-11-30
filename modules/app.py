@@ -21,29 +21,15 @@ class MacroApp:
         
         # 트레이 아이콘 초기화
         self.tray = TrayIcon(self.on_exit)
+        
+        # 종료 플래그
+        self.should_exit = False
     
     def on_exit(self):
         """프로그램 종료"""
+        print("종료 신호 수신...")
+        self.should_exit = True
         self.handler.shutdown()
-    
-    def load_config(self, config):
-        """설정 로드
-        
-        Args:
-            config: 설정 모듈 (config.py)
-        """
-        # 타이밍 설정 구성
-        timings = {
-            'press': config.KEY_PRESS_DURATION,
-            'release': config.KEY_RELEASE_DURATION,
-            'sequence': config.SEQUENCE_DELAY
-        }
-        
-        # 핵심 엔진에 설정 적용
-        self.core.configure(
-            macros=config.MACROS,
-            timings=timings
-        )
     
     def load_config(self, config):
         """설정 로드
@@ -93,6 +79,9 @@ class MacroApp:
         
         # 키보드 후킹 설정
         self.setup_hooks()
+        
+        print("매크로 프로그램이 실행 중입니다...")
+        print("ESC 키를 누르거나 트레이 아이콘에서 '종료'를 선택하세요.")
         
         # 이벤트 대기
         keyboard.wait()

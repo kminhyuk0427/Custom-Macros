@@ -2,8 +2,21 @@ import sys
 import traceback
 import os
 
+# 실행 파일로 빌드되었을 때의 경로 처리
+if getattr(sys, 'frozen', False):
+    # PyInstaller로 빌드된 실행 파일
+    application_path = sys._MEIPASS
+else:
+    # 일반 Python 스크립트
+    application_path = os.path.dirname(os.path.abspath(__file__))
+
 # modules 폴더 경로 추가
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'modules'))
+modules_path = os.path.join(application_path, 'modules')
+if os.path.exists(modules_path):
+    sys.path.insert(0, modules_path)
+
+# 현재 디렉토리도 추가 (config.py를 위해)
+sys.path.insert(0, application_path)
 
 def main():
     """메인 실행 함수"""
@@ -30,6 +43,7 @@ def main():
         
     except KeyboardInterrupt:
         # Ctrl+C로 종료
+        print("\n프로그램이 중단되었습니다.")
         sys.exit(0)
         
     except ImportError as e:

@@ -1,4 +1,5 @@
 import sys
+import os
 import threading
 from pystray import Icon, Menu, MenuItem
 from PIL import Image, ImageDraw
@@ -11,7 +12,7 @@ class TrayIcon:
         Args:
             on_exit_callback: 종료 시 호출할 콜백 함수
         """
-        self.on_exit = on_exit_callback
+        self.on_exit_callback = on_exit_callback
         self.icon = None
         self.running = True
     
@@ -33,9 +34,18 @@ class TrayIcon:
     
     def on_quit(self, icon, item):
         """종료 메뉴 클릭"""
+        print("트레이 아이콘에서 종료 요청...")
         self.running = False
+        
+        # 아이콘 중지
         icon.stop()
-        self.on_exit()
+        
+        # 콜백 호출
+        if self.on_exit_callback:
+            self.on_exit_callback()
+        
+        # 강제 종료 (모든 스레드 포함)
+        os._exit(0)
     
     def create_menu(self):
         """트레이 메뉴 생성"""
@@ -53,11 +63,14 @@ class TrayIcon:
             self.create_menu()
         )
         
-        # 별도 스레드에서 실행
+        # 별도 스레드에서 실행 (daemon=True로 변경)
         def run_icon():
-            self.icon.run()
+            try:
+                self.icon.run()
+            except Exception as e:
+                print(f"트레이 아이콘 오류: {e}")
         
-        icon_thread = threading.Thread(target=run_icon, daemon=False)
+        icon_thread = threading.Thread(target=run_icon, daemon=True)
         icon_thread.start()
     
     def stop(self):

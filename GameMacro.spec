@@ -1,9 +1,9 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all
 
-datas = []
+datas = [('modules/app.py', 'modules'), ('modules/core.py', 'modules'), ('modules/handler.py', 'modules'), ('modules/tray.py', 'modules'), ('config.py', '.')]
 binaries = []
-hiddenimports = ['keyboard', 'pystray', 'PIL', 'config', 'app', 'core', 'handler', 'tray']
+hiddenimports = ['config', 'keyboard', 'pystray', 'PIL', 'PIL.Image', 'PIL.ImageDraw']
 tmp_ret = collect_all('keyboard')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 tmp_ret = collect_all('pystray')
@@ -14,7 +14,7 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 a = Analysis(
     ['main.py'],
-    pathex=['modules'],
+    pathex=[],
     binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,

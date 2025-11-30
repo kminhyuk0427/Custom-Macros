@@ -1,5 +1,6 @@
 import keyboard
 import sys
+import os
 
 class EventHandler:
     """키보드 이벤트 핸들러"""
@@ -61,6 +62,15 @@ class EventHandler:
     
     def shutdown(self):
         """프로그램 종료"""
+        print("프로그램을 종료합니다...")
         self.running = False
         self.core.stop_signal.set()
-        sys.exit(0)
+        
+        # 키보드 후킹 모두 해제
+        try:
+            keyboard.unhook_all()
+        except:
+            pass
+        
+        # 강제 종료
+        os._exit(0)
