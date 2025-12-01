@@ -27,7 +27,7 @@ pip install -r requirements.txt
 ### 3. 메롱 실행
 
 -  바탕화면에 아이콘 클릭 후 실행(관리자 권한 자동으로 들어감)
--  바탕화면에 없으면 ..\custom-melong\dist폴더에 실행 파일이 존재함
+-  바탕화면에 없으면 ..\GTAO-custom-macro-master\dist폴더에 실행 파일이 존재함
 -  게임 키고 나서 메롱 실행을 권장
 
 ##  메롱 설정
