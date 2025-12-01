@@ -1,41 +1,42 @@
 @echo off
 setlocal enabledelayedexpansion
 chcp 65001 > nul
+
 echo ========================================
-echo GThey5M 빌드
+echo GThey5M Build
 echo ========================================
 echo.
 
 REM ========================================
-REM 1단계: Python 설치 확인
+REM Step 1: Check Python Installation
 REM ========================================
-echo [1/6] Python 확인 중...
+echo [1/6] Checking Python...
 where python >nul 2>&1
 if %errorlevel% equ 0 (
     set PYTHON=python
-    echo [OK] Python 발견: python
+    echo [OK] Python found: python
 ) else (
     set PYTHON=C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python313\python.exe
     if exist "!PYTHON!" (
-        echo [OK] Python 발견: !PYTHON!
+        echo [OK] Python found: !PYTHON!
     ) else (
-        echo [실패] Python을 찾을 수 없습니다.
+        echo [FAIL] Python not found.
         echo.
         echo ========================================
-        echo 해결 방법:
+        echo Solutions:
         echo ========================================
-        echo 1. Python 설치 확인
-        echo    - Python이 설치되어 있나요?
-        echo    - 설치 안 됨: https://python.org 에서 다운로드
+        echo 1. Check Python installation
+        echo    - Is Python installed?
+        echo    - If not: Download from https://python.org
         echo.
-        echo 2. PATH 환경변수 확인
-        echo    - Python 설치 시 "Add to PATH" 체크했나요?
-        echo    - 안 했다면: Python 재설치 권장
+        echo 2. Check PATH environment variable
+        echo    - Did you check "Add to PATH" during install?
+        echo    - If not: Reinstall Python recommended
         echo.
-        echo 3. 수동 경로 설정
-        echo    - Python 설치 경로를 찾아서
-        echo    - build.bat 파일 17번째 줄 수정
-        echo    - set PYTHON=경로\python.exe
+        echo 3. Manual path setting
+        echo    - Find Python installation path
+        echo    - Edit build.bat line 17
+        echo    - set PYTHON=path\python.exe
         echo ========================================
         pause
         exit /b 1
@@ -44,10 +45,10 @@ if %errorlevel% equ 0 (
 
 %PYTHON% --version >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [실패] Python 실행 오류
+    echo [FAIL] Python execution error
     echo.
-    echo Python이 손상되었을 수 있습니다.
-    echo Python을 재설치해주세요: https://python.org
+    echo Python may be corrupted.
+    echo Please reinstall Python: https://python.org
     pause
     exit /b 1
 )
@@ -56,134 +57,133 @@ if %errorlevel% neq 0 (
 echo.
 
 REM ========================================
-REM 2단계: 필수 라이브러리 설치 확인
+REM Step 2: Check Required Libraries
 REM ========================================
-echo [2/6] 필수 라이브러리 확인 중...
+echo [2/6] Checking required libraries...
 %PYTHON% -c "import keyboard, pystray, PIL" >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [경고] 필수 라이브러리 누락 감지
+    echo [WARN] Missing required libraries detected
     echo.
-    echo 자동 설치를 시도합니다...
+    echo Attempting automatic installation...
     echo.
     
     %PYTHON% -m pip install --upgrade pip >nul 2>&1
     %PYTHON% -m pip install -r requirements.txt
     
     if %errorlevel% neq 0 (
-        echo [실패] 라이브러리 설치 실패
+        echo [FAIL] Library installation failed
         echo.
         echo ========================================
-        echo 해결 방법:
+        echo Solutions:
         echo ========================================
-        echo 1. 관리자 권한으로 실행
-        echo    - build.bat 우클릭
-        echo    - "관리자 권한으로 실행" 선택
+        echo 1. Run as administrator
+        echo    - Right-click build.bat
+        echo    - Select "Run as administrator"
         echo.
-        echo 2. 수동 설치 시도
-        echo    - 명령 프롬프트 열기
-        echo    - 다음 명령어 실행:
-        echo      pip install keyboard==0.13.5 pystray Pillow
+        echo 2. Try manual installation
+        echo    - Open command prompt
+        echo    - Run: pip install keyboard==0.13.5 pystray Pillow
         echo.
-        echo 3. pip 업그레이드
+        echo 3. Upgrade pip
         echo    - python -m pip install --upgrade pip
-        echo    - 그 후 다시 build.bat 실행
+        echo    - Then run build.bat again
         echo.
-        echo 4. 인터넷 연결 확인
-        echo    - 방화벽이 pip을 차단하고 있나요?
+        echo 4. Check internet connection
+        echo    - Is firewall blocking pip?
         echo ========================================
         pause
         exit /b 1
     )
 )
-echo [OK] 라이브러리 확인 완료
+echo [OK] Libraries verified
 echo.
 
 REM ========================================
-REM 3단계: PyInstaller 확인
+REM Step 3: Check PyInstaller
 REM ========================================
-echo [3/6] PyInstaller 확인 중...
+echo [3/6] Checking PyInstaller...
 %PYTHON% -m PyInstaller --version >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [경고] PyInstaller 미설치
-    echo 자동 설치 중...
+    echo [WARN] PyInstaller not installed
+    echo Installing automatically...
     %PYTHON% -m pip install pyinstaller
     
     if %errorlevel% neq 0 (
-        echo [실패] PyInstaller 설치 실패
+        echo [FAIL] PyInstaller installation failed
         echo.
-        echo 수동으로 설치해주세요:
+        echo Please install manually:
         echo pip install pyinstaller
         pause
         exit /b 1
     )
 )
-echo [OK] PyInstaller 준비 완료
+echo [OK] PyInstaller ready
 echo.
 
 REM ========================================
-REM 4단계: 필수 파일 확인
+REM Step 4: Check Required Files
 REM ========================================
-echo [4/6] 필수 파일 확인 중...
+echo [4/6] Checking required files...
 set MISSING_FILES=0
 
 if not exist "main.py" (
-    echo [실패] main.py 파일 없음
+    echo [FAIL] main.py not found
     set MISSING_FILES=1
 )
 
 if not exist "config.py" (
-    echo [실패] config.py 파일 없음
+    echo [FAIL] config.py not found
     set MISSING_FILES=1
 )
 
 if not exist "modules\app.py" (
-    echo [실패] modules\app.py 파일 없음
+    echo [FAIL] modules\app.py not found
     set MISSING_FILES=1
 )
 
 if not exist "modules\core.py" (
-    echo [실패] modules\core.py 파일 없음
+    echo [FAIL] modules\core.py not found
     set MISSING_FILES=1
 )
 
 if not exist "modules\handler.py" (
-    echo [실패] modules\handler.py 파일 없음
+    echo [FAIL] modules\handler.py not found
     set MISSING_FILES=1
 )
 
 if not exist "modules\tray.py" (
-    echo [실패] modules\tray.py 파일 없음
+    echo [FAIL] modules\tray.py not found
     set MISSING_FILES=1
 )
 
 if !MISSING_FILES! equ 1 (
     echo.
     echo ========================================
-    echo 해결 방법:
+    echo Solutions:
     echo ========================================
-    echo 1. 파일이 모두 있는지 확인
+    echo 1. Check if all files exist
     echo    - main.py
     echo    - config.py
-    echo    - modules 폴더 및 내부 파일들
+    echo    - modules folder and its files
     echo.
-    echo 2. 압축 파일을 다시 풀어보세요
-    echo    - 모든 파일이 함께 있어야 합니다
+    echo 2. Re-extract the archive
+    echo    - All files must be together
     echo.
-    echo 3. 파일이 손상되었을 수 있습니다
-    echo    - 원본 파일을 다시 다운로드하세요
+    echo 3. Files may be corrupted
+    echo    - Re-download original files
     echo ========================================
     pause
     exit /b 1
 )
-echo [OK] 모든 필수 파일 존재
+echo [OK] All required files exist
 echo.
 
-REM __init__.py 생성
+REM Create __init__.py
 if not exist modules\__init__.py (
     echo # modules package > modules\__init__.py
 )
 
-REM 매니페스트 파일 생성
+REM Create manifest file
 (
 echo ^<?xml version="1.0" encoding="UTF-8" standalone="yes"?^>
 echo ^<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0"^>
@@ -200,9 +200,9 @@ echo ^</assembly^>
 ) > GThey5M.manifest
 
 REM ========================================
-REM 5단계: 이전 빌드 정리
+REM Step 5: Clean Previous Build
 REM ========================================
-echo [5/6] 이전 빌드 정리 중...
+echo [5/6] Cleaning previous build...
 if exist build (
     rmdir /s /q build >nul 2>&1
 )
@@ -212,19 +212,19 @@ if exist dist (
 if exist GThey5M.spec (
     del GThey5M.spec >nul 2>&1
 )
-echo [OK] 정리 완료
+echo [OK] Cleanup complete
 echo.
 
 REM ========================================
-REM 6단계: 빌드 실행
+REM Step 6: Start Build
 REM ========================================
-echo [6/6] 빌드 시작 (1-2분 소요)
+echo [6/6] Starting build (1-2 minutes)
 echo.
-echo 빌드 중... 잠시만 기다려주세요.
+echo Building... Please wait.
 echo.
 echo.
 
-REM 빌드 실행
+REM Execute build
 if exist icon.ico (
     %PYTHON% -m PyInstaller --onefile --noconsole --name=GThey5M --manifest=GThey5M.manifest --uac-admin --clean --noconfirm --hidden-import=keyboard --hidden-import=pystray --hidden-import=PIL --hidden-import=PIL.Image --hidden-import=PIL.ImageDraw --add-data "config.py;." --add-data "modules;modules" --add-data "icon.ico;." --icon=icon.ico main.py >build_log.txt 2>&1
 ) else (
@@ -232,31 +232,31 @@ if exist icon.ico (
 )
 
 if %errorlevel% neq 0 (
-    echo [실패] 빌드 중 오류 발생
+    echo [FAIL] Build error occurred
     echo.
     echo ========================================
-    echo 오류 로그 확인:
+    echo Check error log:
     echo ========================================
-    echo 전체 로그는 build_log.txt 파일을 확인하세요.
+    echo Full log available in build_log.txt file.
     echo.
     echo ========================================
-    echo 일반적인 해결 방법:
+    echo Common solutions:
     echo ========================================
-    echo 1. 디스크 공간 확인
-    echo    - 최소 500MB 이상 필요
+    echo 1. Check disk space
+    echo    - Minimum 500MB required
     echo.
-    echo 2. 바이러스 백신 확인
-    echo    - 백신이 빌드를 차단할 수 있음
-    echo    - 임시로 비활성화 후 재시도
+    echo 2. Check antivirus
+    echo    - Antivirus may block build
+    echo    - Temporarily disable and retry
     echo.
-    echo 3. 관리자 권한으로 실행
-    echo    - build.bat 우클릭
-    echo    - "관리자 권한으로 실행"
+    echo 3. Run as administrator
+    echo    - Right-click build.bat
+    echo    - "Run as administrator"
     echo.
-    echo 4. 경로에 한글 포함 여부
-    echo    - 폴더명을 영문으로 변경
+    echo 4. Check path for Korean characters
+    echo    - Change folder name to English
     echo.
-    echo 5. PyInstaller 재설치
+    echo 5. Reinstall PyInstaller
     echo    - pip uninstall pyinstaller
     echo    - pip install pyinstaller
     echo ========================================
@@ -266,54 +266,54 @@ if %errorlevel% neq 0 (
 
 echo.
 echo ========================================
-echo 빌드 완료!
+echo Build Complete!
 echo ========================================
 
 REM ========================================
-REM 빌드 결과 확인
+REM Check Build Result
 REM ========================================
 if exist dist\GThey5M.exe (
     echo.
-    echo [OK] 실행 파일 생성 성공!
+    echo [OK] Executable created successfully!
     echo.
     
-    REM 바탕화면으로 복사
+    REM Copy to desktop
     set DESKTOP=%USERPROFILE%\Desktop
     copy /Y dist\GThey5M.exe "!DESKTOP!\GThey5M.exe" >nul 2>&1
     
     if exist "!DESKTOP!\GThey5M.exe" (
-        echo [OK] 바탕화면 복사 완료!
-        echo      위치: !DESKTOP!\GThey5M.exe
+        echo [OK] Copied to desktop!
+        echo      Location: !DESKTOP!\GThey5M.exe
     ) else (
-        echo [경고] 바탕화면 복사 실패
-        echo        수동 복사: dist\GThey5M.exe
+        echo [WARN] Desktop copy failed
+        echo        Manual copy: dist\GThey5M.exe
     )
     
     echo.
     echo ========================================
-    echo 주의사항:
+    echo Important Notes:
     echo ========================================
-    echo - 백신 프로그램이 차단할 수 있음 (허용 설정 필요)
-    echo - 반드시 관리자 권한으로 실행
-    echo - config.py 수정 후 다시 빌드 필요
+    echo - Antivirus may block (allow in settings)
+    echo - Must run with administrator privileges
+    echo - Need to rebuild after modifying config.py
     echo ========================================
     
 ) else (
     echo.
-    echo (무시해도 되는 오류)
-    echo [경고] dist\GThey5M.exe 파일 생성 안 됨
+    echo (Ignorable warning)
+    echo [WARN] dist\GThey5M.exe not created
     echo.
     echo ========================================
-    echo 해결 방법:
+    echo Solutions:
     echo ========================================
-    echo 1. build_log.txt 파일 확인
-    echo    - 상세한 오류 내역 포함
+    echo 1. Check build_log.txt file
+    echo    - Contains detailed error info
     echo.
-    echo 2. 다시 시도
-    echo    - build.bat을 다시 실행
+    echo 2. Try again
+    echo    - Run build.bat again
     echo.
-    echo 3. 백신 프로그램 확인
-    echo    - 실시간 검사 일시 중지
+    echo 3. Check antivirus
+    echo    - Pause real-time scanning
     echo ========================================
 )
 
