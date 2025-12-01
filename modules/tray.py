@@ -42,11 +42,11 @@ class TrayIcon:
     def run(self):
         """실행"""
         self.icon = Icon(
-            "GTA5M",
+            "GThey5M",
             self.load_icon_image(),
-            "GTA5M",
+            "GThey5M",
             Menu(
-                MenuItem('GTA5M', lambda: None, enabled=False),
+                MenuItem('GThey5M', lambda: None, enabled=False),
                 MenuItem('종료', self.on_quit)
             )
         )

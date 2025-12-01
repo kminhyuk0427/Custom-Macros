@@ -49,7 +49,7 @@ class melongApp:
         """실행"""
         self.tray.run()
         self.setup_hooks()
-        print("GTA5M 실행 중")
+        print("GThey5M 실행 중")
         print(f"토글: [{self.toggle_key}] | 종료: 트레이 우클릭")
         keyboard.wait()
     

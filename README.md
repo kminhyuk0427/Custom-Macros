@@ -1,4 +1,4 @@
-# GTA5M
+# GThey5M
 
 
 ##  주요 기능(세부 설명은 config.py)

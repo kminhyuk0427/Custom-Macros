@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 chcp 65001 > nul
 echo ========================================
-echo GTA5M 빌드
+echo GThey5M 빌드
 echo ========================================
 echo.
 
@@ -187,8 +187,8 @@ REM 매니페스트 파일 생성
 (
 echo ^<?xml version="1.0" encoding="UTF-8" standalone="yes"?^>
 echo ^<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0"^>
-echo   ^<assemblyIdentity version="1.0.0.0" processorArchitecture="*" name="GTA5M" type="win32"/^>
-echo   ^<description^>GTA5M^</description^>
+echo   ^<assemblyIdentity version="1.0.0.0" processorArchitecture="*" name="GThey5M" type="win32"/^>
+echo   ^<description^>GThey5M^</description^>
 echo   ^<trustInfo xmlns="urn:schemas-microsoft-com:asm.v3"^>
 echo     ^<security^>
 echo       ^<requestedPrivileges^>
@@ -197,7 +197,7 @@ echo       ^</requestedPrivileges^>
 echo     ^</security^>
 echo   ^</trustInfo^>
 echo ^</assembly^>
-) > GTA5M.manifest
+) > GThey5M.manifest
 
 REM ========================================
 REM 5단계: 이전 빌드 정리
@@ -209,8 +209,8 @@ if exist build (
 if exist dist (
     rmdir /s /q dist >nul 2>&1
 )
-if exist GTA5M.spec (
-    del GTA5M.spec >nul 2>&1
+if exist GThey5M.spec (
+    del GThey5M.spec >nul 2>&1
 )
 echo [OK] 정리 완료
 echo.
@@ -226,9 +226,9 @@ echo.
 
 REM 빌드 실행
 if exist icon.ico (
-    %PYTHON% -m PyInstaller --onefile --noconsole --name=GTA5M --manifest=GTA5M.manifest --uac-admin --clean --noconfirm --hidden-import=keyboard --hidden-import=pystray --hidden-import=PIL --hidden-import=PIL.Image --hidden-import=PIL.ImageDraw --add-data "config.py;." --add-data "modules;modules" --add-data "icon.ico;." --icon=icon.ico main.py >build_log.txt 2>&1
+    %PYTHON% -m PyInstaller --onefile --noconsole --name=GThey5M --manifest=GThey5M.manifest --uac-admin --clean --noconfirm --hidden-import=keyboard --hidden-import=pystray --hidden-import=PIL --hidden-import=PIL.Image --hidden-import=PIL.ImageDraw --add-data "config.py;." --add-data "modules;modules" --add-data "icon.ico;." --icon=icon.ico main.py >build_log.txt 2>&1
 ) else (
-    %PYTHON% -m PyInstaller --onefile --noconsole --name=GTA5M --manifest=GTA5M.manifest --uac-admin --clean --noconfirm --hidden-import=keyboard --hidden-import=pystray --hidden-import=PIL --hidden-import=PIL.Image --hidden-import=PIL.ImageDraw --add-data "config.py;." --add-data "modules;modules" main.py >build_log.txt 2>&1
+    %PYTHON% -m PyInstaller --onefile --noconsole --name=GThey5M --manifest=GThey5M.manifest --uac-admin --clean --noconfirm --hidden-import=keyboard --hidden-import=pystray --hidden-import=PIL --hidden-import=PIL.Image --hidden-import=PIL.ImageDraw --add-data "config.py;." --add-data "modules;modules" main.py >build_log.txt 2>&1
 )
 
 if %errorlevel% neq 0 (
@@ -272,21 +272,21 @@ echo ========================================
 REM ========================================
 REM 빌드 결과 확인
 REM ========================================
-if exist dist\GTA5M.exe (
+if exist dist\GThey5M.exe (
     echo.
     echo [OK] 실행 파일 생성 성공!
     echo.
     
     REM 바탕화면으로 복사
     set DESKTOP=%USERPROFILE%\Desktop
-    copy /Y dist\GTA5M.exe "!DESKTOP!\GTA5M.exe" >nul 2>&1
+    copy /Y dist\GThey5M.exe "!DESKTOP!\GThey5M.exe" >nul 2>&1
     
-    if exist "!DESKTOP!\GTA5M.exe" (
+    if exist "!DESKTOP!\GThey5M.exe" (
         echo [OK] 바탕화면 복사 완료!
-        echo      위치: !DESKTOP!\GTA5M.exe
+        echo      위치: !DESKTOP!\GThey5M.exe
     ) else (
         echo [경고] 바탕화면 복사 실패
-        echo        수동 복사: dist\GTA5M.exe
+        echo        수동 복사: dist\GThey5M.exe
     )
     
     echo.
@@ -301,7 +301,7 @@ if exist dist\GTA5M.exe (
 ) else (
     echo.
     echo (무시해도 되는 오류)
-    echo [경고] dist\GTA5M.exe 파일 생성 안 됨
+    echo [경고] dist\GThey5M.exe 파일 생성 안 됨
     echo.
     echo ========================================
     echo 해결 방법:
