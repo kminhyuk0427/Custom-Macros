@@ -18,112 +18,60 @@ class MacroApp:
         self.toggle_key = '`'
     
     def on_exit(self):
-        """프로그램 종료"""
         if self.handler:
             self.handler.shutdown()
     
     def load_config(self, config):
         """설정 로드"""
-        timings = {
-            'press': config.KEY_PRESS_DURATION,
-            'release': config.KEY_RELEASE_DURATION,
-            'sequence': config.SEQUENCE_DELAY
-        }
-        
-        self.toggle_key = config.TOGGLE_KEY
-        
         self.core.configure(
-            macros=config.MACROS,
-            timings=timings
+            config.MACROS,
+            {
+                'press': config.KEY_PRESS_DURATION,
+                'release': config.KEY_RELEASE_DURATION,
+                'sequence': config.SEQUENCE_DELAY
+            }
         )
-        
+        self.toggle_key = config.TOGGLE_KEY
         self.handler = EventHandler(self.core, self.toggle_key)
     
     def setup_hooks(self):
-        """키보드 후킹 설정"""
-        keyboard.on_press_key(
-            self.toggle_key,
-            self.handler.handle_press,
-            suppress=True
-        )
-        keyboard.on_release_key(
-            self.toggle_key,
-            self.handler.handle_release,
-            suppress=True
-        )
+        """키보드 후킹"""
+        # 토글 키
+        keyboard.on_press_key(self.toggle_key, self.handler.handle_press, suppress=True)
+        keyboard.on_release_key(self.toggle_key, self.handler.handle_release, suppress=True)
         
-        for macro_key in self.core.macros.keys():
-            keyboard.on_press_key(
-                macro_key,
-                self.handler.handle_press,
-                suppress=True
-            )
-            keyboard.on_release_key(
-                macro_key,
-                self.handler.handle_release,
-                suppress=True
-            )
+        # 매크로 키
+        for key in self.core.macros:
+            keyboard.on_press_key(key, self.handler.handle_press, suppress=True)
+            keyboard.on_release_key(key, self.handler.handle_release, suppress=True)
     
     def run(self):
-        """애플리케이션 실행"""
+        """실행"""
         self.tray.run()
         self.setup_hooks()
-        
-        print("========================================")
         print("GTA 매크로 실행 중")
-        print("========================================")
-        print(f"토글: [{self.toggle_key}]")
-        print(f"상태: {'활성화' if self.core.macro_enabled else '비활성화'}")
-        print("종료: 트레이 아이콘 우클릭 - 종료")
-        print("========================================")
-        
+        print(f"토글: [{self.toggle_key}] | 종료: 트레이 우클릭")
         keyboard.wait()
     
-    def validate_config(self, config) -> bool:
+    def validate_config(self, cfg):
         """설정 검증"""
-        if not hasattr(config, 'MACROS') or not config.MACROS:
+        if not hasattr(cfg, 'MACROS') or not isinstance(cfg.MACROS, dict) or not cfg.MACROS:
+            return False
+        if not hasattr(cfg, 'TOGGLE_KEY') or not isinstance(cfg.TOGGLE_KEY, str):
             return False
         
-        if not isinstance(config.MACROS, dict):
-            return False
-        
-        if not hasattr(config, 'TOGGLE_KEY'):
-            return False
-        
-        for key, macro_info in config.MACROS.items():
-            if not isinstance(macro_info, dict):
+        for k, v in cfg.MACROS.items():
+            if not isinstance(v, dict) or 'keys' not in v or 'mode' not in v:
                 return False
-            
-            if 'keys' not in macro_info or 'mode' not in macro_info:
+            if v['mode'] not in [0,1,2]:
                 return False
-            
-            if macro_info['mode'] not in [0, 1, 2]:
+            if not isinstance(v['keys'], list) or not v['keys']:
                 return False
-            
-            if not isinstance(macro_info['keys'], list) or not macro_info['keys']:
+            if 'delays' in v and len(v['delays']) != len(v['keys']):
                 return False
-            
-            if 'delays' in macro_info:
-                delays = macro_info['delays']
-                if not isinstance(delays, list):
-                    return False
-                if len(delays) != len(macro_info['keys']):
-                    return False
-            
-            if 'holds' in macro_info:
-                holds = macro_info['holds']
-                if not isinstance(holds, list):
-                    return False
-                if len(holds) != len(macro_info['keys']):
-                    return False
+            if 'holds' in v and len(v['holds']) != len(v['keys']):
+                return False
         
-        if not hasattr(config, 'KEY_PRESS_DURATION') or config.KEY_PRESS_DURATION < 0:
-            return False
-        
-        if not hasattr(config, 'KEY_RELEASE_DURATION') or config.KEY_RELEASE_DURATION < 0:
-            return False
-        
-        if not hasattr(config, 'SEQUENCE_DELAY') or config.SEQUENCE_DELAY < 0:
-            return False
-        
-        return True
+        return (hasattr(cfg, 'KEY_PRESS_DURATION') and cfg.KEY_PRESS_DURATION >= 0 and
+                hasattr(cfg, 'KEY_RELEASE_DURATION') and cfg.KEY_RELEASE_DURATION >= 0 and
+                hasattr(cfg, 'SEQUENCE_DELAY') and cfg.SEQUENCE_DELAY >= 0)
