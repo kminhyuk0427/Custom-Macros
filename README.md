@@ -1,4 +1,4 @@
-# GThey5M
+#  Custom Macros
 
 
 ##  주요 기능(세부 설명은 config.py)
@@ -27,7 +27,7 @@ pip install -r requirements.txt
 ### 3. 매크로 실행
 
 -  바탕화면에 아이콘 클릭 후 실행(관리자 권한 자동으로 들어감)
--  바탕화면에 없으면 ..\GTAO-custom-macro-master\dist폴더에 실행 파일이 존재함
+-  바탕화면에 없으면 ..\Custom-Macros-master\dist폴더에 실행 파일이 존재함
 -  게임 키고 나서 매크로 실행을 권장
 
 ##  매크로 설정
@@ -70,7 +70,8 @@ MACROS = {
 
 '
 
-참고 프로젝트: [Lester-Ver2.0]https://github.com/JU5TDIE/Lester-Ver2.0
+참고 프로젝트:
+https://github.com/JU5TDIE/Lester-Ver2.0
 
 
 
