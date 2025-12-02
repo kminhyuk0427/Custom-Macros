@@ -48,47 +48,47 @@ KEYEVENTF_SCANCODE = 0x0008
 KEYEVENTF_KEYUP = 0x0002
 KEYEVENTF_EXTENDEDKEY = 0x0001
 
-class melongCore:
-    """최적화된 매크로 코어 (메모리 효율 + 버그 수정)"""
-    __slots__ = ('is_running', 'current_melong', 'stop_signal', 'pressed_keys', 
-                 'mode2_events', 'melong_enabled', 'melongs', 'timings', 
+class macroCore:
+    """매크로 코어"""
+    __slots__ = ('is_running', 'current_macro', 'stop_signal', 'pressed_keys', 
+                 'mode2_events', 'macro_enabled', 'macros', 'timings', 
                  '_extra', '_input_cache', 'user_trigger_keys', 'macro_executing')
     
     def __init__(self):
         self.is_running = False
-        self.current_melong = None
+        self.current_macro = None
         self.stop_signal = threading.Event()
         self.pressed_keys = set()
         self.mode2_events = {}
-        self.melong_enabled = True
-        self.melongs = {}
+        self.macro_enabled = True
+        self.macros = {}
         self.timings = {'press': 0.05, 'release': 0.03, 'sequence': 0.01}
         self._extra = c_ulong(0)
         self._input_cache = {}
         
-        # 🔑 사용자가 직접 누른 트리거 키 추적
+        # 사용자가 직접 누른 트리거 키 추적
         self.user_trigger_keys = set()
         
-        # 🔒 매크로 실행 중 플래그 (DirectInput 키 입력이 재트리거 방지)
+        # 매크로 실행 중 플래그
         self.macro_executing = threading.Lock()
     
-    def configure(self, melongs, timings):
-        self.melongs = melongs
+    def configure(self, macros, timings):
+        self.macros = macros
         self.timings = timings
         
-        for key, info in melongs.items():
+        for key, info in macros.items():
             if info['mode'] == 2:
                 self.mode2_events[key] = threading.Event()
                 self.mode2_events[key].set()
     
-    def toggle_melong(self):
-        self.melong_enabled = not self.melong_enabled
-        if not self.melong_enabled and self.is_running:
+    def toggle_macro(self):
+        self.macro_enabled = not self.macro_enabled
+        if not self.macro_enabled and self.is_running:
             self.stop_signal.set()
-        return self.melong_enabled
+        return self.macro_enabled
     
     def _send_input(self, scan_code, is_extended, is_keyup):
-        """DirectInput 전송 (캐싱 최적화)"""
+        """DirectInput"""
         flags = KEYEVENTF_SCANCODE
         if is_extended:
             flags |= KEYEVENTF_EXTENDEDKEY
@@ -104,7 +104,7 @@ class melongCore:
         SendInput(1, ctypes.pointer(self._input_cache[cache_key]), ctypes.sizeof(Input))
     
     def execute_key(self, key, delay=None, hold=None):
-        """단일 키 실행 (DirectInput, Extended Key 수정)"""
+        """단일 키 실행"""
         key_lower = key.lower()
         
         if key_lower not in SCANCODE_MAP:
@@ -129,7 +129,7 @@ class melongCore:
         
         try:
             for i, key in enumerate(keys):
-                if not self.melong_enabled:
+                if not self.macro_enabled:
                     break
                 self.execute_key(key, delays[i] if delays else None, 
                                holds[i] if holds else None)
@@ -140,7 +140,7 @@ class melongCore:
     def run_repeat(self, trigger, keys, delays, holds):
         """모드 1: 연속 반복"""
         try:
-            while (not self.stop_signal.is_set() and self.melong_enabled and 
+            while (not self.stop_signal.is_set() and self.macro_enabled and 
                    trigger in self.pressed_keys):
                 for i, key in enumerate(keys):
                     if trigger not in self.pressed_keys:
@@ -150,14 +150,14 @@ class melongCore:
                 time.sleep(self.timings['sequence'])
         finally:
             self.is_running = False
-            self.current_melong = None
+            self.current_macro = None
     
     def start(self, trigger):
         """매크로 시작"""
-        if not self.melong_enabled or trigger not in self.melongs:
+        if not self.macro_enabled or trigger not in self.macros:
             return False
         
-        info = self.melongs[trigger]
+        info = self.macros[trigger]
         mode = info['mode']
         
         if mode == 0:
@@ -179,7 +179,7 @@ class melongCore:
             return False
         
         self.is_running = True
-        self.current_melong = trigger
+        self.current_macro = trigger
         self.stop_signal.clear()
         threading.Thread(target=self.run_repeat, args=(trigger, keys, delays, holds), 
                        daemon=True).start()
@@ -187,5 +187,5 @@ class melongCore:
     
     def stop(self, trigger):
         """매크로 중단"""
-        if self.current_melong == trigger:
+        if self.current_macro == trigger:
             self.stop_signal.set()

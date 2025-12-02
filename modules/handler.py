@@ -3,7 +3,7 @@ import threading
 import os
 
 class EventHandler:
-    """키보드 이벤트 핸들러 (매크로 연쇄 허용 + 최적화)"""
+    """키보드 이벤트 핸들러"""
     __slots__ = ('core', 'toggle_key', 'blocked', 'shift_map')
     
     def __init__(self, core, toggle_key='`'):
@@ -11,7 +11,7 @@ class EventHandler:
         self.toggle_key = toggle_key
         self.blocked = set()
         
-        # Shift 맵 (최적화)
+        # Shift 맵
         self.shift_map = {
             '!': '1', '@': '2', '#': '3', '$': '4', '%': '5', '^': '6', 
             '&': '7', '*': '8', '(': '9', ')': '0', '~': '`'
@@ -22,32 +22,32 @@ class EventHandler:
         return self.shift_map.get(event.name, event.name)
     
     def handle_press(self, event):
-        """키 눌림 처리 (매크로 연쇄 허용)"""
+        """키 눌림 처리"""
         key = self.get_base_key(event)
         
         # 토글 키
         if key == self.toggle_key:
-            self.core.toggle_melong()
+            self.core.toggle_macro()
             return False
         
         # 매크로 비활성화 시
-        if not self.core.melong_enabled:
+        if not self.core.macro_enabled:
             return True
         
         # 매크로 키 아니면 통과
-        if key not in self.core.melongs:
+        if key not in self.core.macros:
             return True
         
         # 이미 차단 중이면 무시
         if key in self.blocked:
             return False
         
-        # 🔑 핵심 수정: 사용자가 직접 누른 경우만 체크
+        # 핵심 수정: 사용자가 직접 누른 경우만 체크
         if key in self.core.user_trigger_keys:
             return False
         
         # mode 2 중복 방지
-        info = self.core.melongs[key]
+        info = self.core.macros[key]
         if info['mode'] == 2:
             event_obj = self.core.mode2_events.get(key)
             if event_obj and not event_obj.is_set():
@@ -57,7 +57,7 @@ class EventHandler:
         if key in self.core.pressed_keys:
             return False
         
-        # 🔑 사용자가 직접 누른 트리거로 표시
+        # 사용자가 직접 누른 트리거로 표시
         self.core.user_trigger_keys.add(key)
         
         # 차단 및 실행
@@ -76,14 +76,14 @@ class EventHandler:
             return False
         
         # 매크로 비활성화 시
-        if not self.core.melong_enabled:
+        if not self.core.macro_enabled:
             return True
         
         # 매크로 키 아니면 통과
-        if key not in self.core.melongs:
+        if key not in self.core.macros:
             return True
         
-        # 🔑 사용자가 직접 누른 키만 처리
+        # 사용자가 직접 누른 키만 처리
         if key not in self.core.user_trigger_keys:
             return False
         
@@ -91,7 +91,7 @@ class EventHandler:
         self.core.user_trigger_keys.discard(key)
         self.core.pressed_keys.discard(key)
         
-        mode = self.core.melongs[key]['mode']
+        mode = self.core.macros[key]['mode']
         
         if mode == 1:
             # mode 1: 즉시 중단

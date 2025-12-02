@@ -3,8 +3,7 @@ setlocal enabledelayedexpansion
 chcp 65001 > nul
 
 echo ========================================
-echo GThey5M Build v1.8
-echo 매크로 연쇄 방지 + GTA5 최적화
+echo GThey5M Build
 echo ========================================
 echo.
 
@@ -189,7 +188,7 @@ REM Create manifest file
 echo ^<?xml version="1.0" encoding="UTF-8" standalone="yes"?^>
 echo ^<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0"^>
 echo   ^<assemblyIdentity version="1.8.0.0" processorArchitecture="*" name="GThey5M" type="win32"/^>
-echo   ^<description^>GThey5M v1.8 - Macro Chain Prevention^</description^>
+echo   ^<description^>GThey5M - Macro Chain Prevention^</description^>
 echo   ^<trustInfo xmlns="urn:schemas-microsoft-com:asm.v3"^>
 echo     ^<security^>
 echo       ^<requestedPrivileges^>
@@ -221,7 +220,7 @@ REM Step 6: Start Build
 REM ========================================
 echo [6/6] Starting build (1-2 minutes)
 echo.
-echo Building v1.8... Please wait.
+echo Building... Please wait.
 echo - Macro chain prevention enabled
 echo - GTA5 optimization applied
 echo.
@@ -268,7 +267,7 @@ if %errorlevel% neq 0 (
 
 echo.
 echo ========================================
-echo Build Complete! v1.8
+echo Build Complete!
 echo ========================================
 
 REM ========================================
@@ -293,7 +292,7 @@ if exist dist\GThey5M.exe (
     
     echo.
     echo ========================================
-    echo v1.8 New Features:
+    echo New Features:
     echo ========================================
     echo [+] Macro chain trigger prevention
     echo [+] Enhanced GTA5 compatibility

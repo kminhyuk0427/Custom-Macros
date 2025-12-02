@@ -12,9 +12,9 @@ sys.path.insert(0, os.path.join(application_path, 'modules'))
 def main():
     try:
         import config
-        from app import melongApp
+        from app import macroApp
         
-        app = melongApp()
+        app = macroApp()
         
         if not app.validate_config(config):
             sys.exit(1)
