@@ -9,14 +9,15 @@ from handler import EventHandler
 from tray import TrayIcon
 
 class macroApp:
-    """매크로 애플리케이션"""
-    __slots__ = ('core', 'handler', 'tray', 'toggle_key')
+    """매크로 애플리케이션 (최적화 버전)"""
+    __slots__ = ('core', 'handler', 'tray', 'toggle_key', 'force_quit_keys')
 
     def __init__(self):
         self.core = macroCore()
         self.handler = None
         self.tray = TrayIcon(self.on_exit)
         self.toggle_key = '`'
+        self.force_quit_keys = ['alt', 'shift', 'delete']
 
     def on_exit(self):
         if self.handler:
@@ -30,13 +31,19 @@ class macroApp:
             'sequence': config.SEQUENCE_DELAY
         })
         self.toggle_key = config.TOGGLE_KEY
-        self.handler = EventHandler(self.core, self.toggle_key)
+        self.force_quit_keys = getattr(config, 'FORCE_QUIT_KEYS', ['alt', 'shift', 'delete'])
+        self.handler = EventHandler(self.core, self.toggle_key, self.force_quit_keys)
     
     def setup_hooks(self):
-        """키보드 훅 등록"""
+        """키보드 훅 등록 (최적화)"""
         # 토글 키
         keyboard.on_press_key(self.toggle_key, self.handler.handle_press, suppress=True)
         keyboard.on_release_key(self.toggle_key, self.handler.handle_release, suppress=True)
+        
+        # 강제 종료 키 등록
+        for key in self.force_quit_keys:
+            keyboard.on_press_key(key, self.handler.handle_press, suppress=False)
+            keyboard.on_release_key(key, self.handler.handle_release, suppress=False)
         
         # 매크로 키 일괄 등록
         for key in self.core.macros:
@@ -51,22 +58,24 @@ class macroApp:
         print("KeyM 실행 중")
         print("=" * 60)
         print(f"토글 키: [{self.toggle_key}]")
+        print(f"강제 종료: [{' + '.join(self.force_quit_keys).upper()}]")
         print(f"등록된 매크로: {len(self.core.macros)}개")
         print(f"매크로 연쇄: 허용")
         print(f"DirectInput: 활성화")
         print("=" * 60)
-        print("종료: 트레이 아이콘 우클릭")
+        print("종료: 트레이 아이콘 우클릭 또는 강제 종료 키")
         print("=" * 60)
         keyboard.wait()
     
     def validate_config(self, cfg):
-        """설정 검증"""
+        """설정 검증 (최적화)"""
         required = ['MACROS', 'TOGGLE_KEY', 'KEY_PRESS_DURATION', 
                    'KEY_RELEASE_DURATION', 'SEQUENCE_DELAY']
         
         # 필수 속성 체크
-        if not all(hasattr(cfg, attr) for attr in required):
-            print("[오류] config.py에 필수 속성이 없습니다.")
+        missing = [attr for attr in required if not hasattr(cfg, attr)]
+        if missing:
+            print(f"[오류] config.py에 필수 속성 누락: {', '.join(missing)}")
             return False
         
         # MACROS 검증
@@ -76,7 +85,11 @@ class macroApp:
         
         # 각 매크로 검증
         for k, v in cfg.MACROS.items():
-            if not isinstance(v, dict) or 'keys' not in v or 'mode' not in v:
+            if not isinstance(v, dict):
+                print(f"[오류] 매크로 '{k}': 딕셔너리 형식이 아닙니다")
+                return False
+            
+            if 'keys' not in v or 'mode' not in v:
                 print(f"[오류] 매크로 '{k}': 필수 필드 누락 (keys, mode)")
                 return False
             
@@ -98,10 +111,10 @@ class macroApp:
                 return False
         
         # 타이밍 검증
-        if any(getattr(cfg, attr) < 0 for attr in ['KEY_PRESS_DURATION', 
-                                                     'KEY_RELEASE_DURATION', 
-                                                     'SEQUENCE_DELAY']):
-            print("[오류] 타이밍 설정은 음수일 수 없습니다.")
+        timing_attrs = ['KEY_PRESS_DURATION', 'KEY_RELEASE_DURATION', 'SEQUENCE_DELAY']
+        invalid_timings = [attr for attr in timing_attrs if getattr(cfg, attr, 0) < 0]
+        if invalid_timings:
+            print(f"[오류] 타이밍 설정은 음수일 수 없습니다: {', '.join(invalid_timings)}")
             return False
         
         print("설정 검증 완료")
