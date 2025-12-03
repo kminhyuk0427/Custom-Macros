@@ -1,6 +1,5 @@
-ï»¿@echo off
+@echo off
 setlocal enabledelayedexpansion
-chcp 65001 > nul
 
 echo ========================================
 echo KeyM Build System
@@ -254,15 +253,15 @@ if !MISSING_FILES! equ 1 (
     echo    1. Make sure build.bat is in root folder
     echo    2. Verify folder structure:
     echo       Custom-Macros-master\
-    echo       â”œâ”€â”€ build.bat
-    echo       â”œâ”€â”€ main.py
-    echo       â”œâ”€â”€ config.py
-    echo       â”œâ”€â”€ requirements.txt
-    echo       â””â”€â”€ modules\
-    echo           â”œâ”€â”€ app.py
-    echo           â”œâ”€â”€ core.py
-    echo           â”œâ”€â”€ handler.py
-    echo           â””â”€â”€ tray.py
+    echo       ?”œ?????? build.bat
+    echo       ?”œ?????? main.py
+    echo       ?”œ?????? config.py
+    echo       ?”œ?????? requirements.txt
+    echo       ?””?????? modules\
+    echo           ?”œ?????? app.py
+    echo           ?”œ?????? core.py
+    echo           ?”œ?????? handler.py
+    echo           ?””?????? tray.py
     echo.
     echo Solution 3: Re-extract Archive
     echo    - Make sure to extract ALL files
@@ -467,7 +466,7 @@ if exist dist\KeyM.exe (
     echo How to Fix: Executable Missing
     echo ========================================
     echo.
-    echo This means build completed but fileã… missing.
+    echo This means build completed but file?… missing.
     echo.
     echo Possible Causes:
     echo    1. Antivirus deleted it immediately
