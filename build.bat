@@ -3,7 +3,7 @@ setlocal enabledelayedexpansion
 chcp 65001 > nul
 
 echo ========================================
-echo KeyM Build System v2.1.0
+echo KeyM Build System
 echo ========================================
 echo.
 

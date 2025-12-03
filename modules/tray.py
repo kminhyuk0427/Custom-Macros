@@ -5,7 +5,7 @@ from pystray import Icon, Menu, MenuItem
 from PIL import Image, ImageDraw
 
 class TrayIcon:
-    """시스템 트레이 아이콘 (최적화 버전)"""
+    """시스템 트레이 아이콘"""
     __slots__ = ('on_exit_callback', 'icon', '_image_cache')
     
     def __init__(self, on_exit_callback):
@@ -14,13 +14,12 @@ class TrayIcon:
         self._image_cache = None
     
     def load_icon_image(self):
-        """아이콘 로드 (캐싱)"""
+        """아이콘 로드"""
         if self._image_cache:
             return self._image_cache
         
         base = sys._MEIPASS if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
         
-        # icon.ico 경로 탐색
         icon_paths = [
             os.path.join(base, 'icon.ico'),
             os.path.join(os.path.dirname(base), 'icon.ico')

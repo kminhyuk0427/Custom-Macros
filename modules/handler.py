@@ -1,49 +1,45 @@
-import time
 import threading
 import os
 
 class EventHandler:
-    """키보드 이벤트 핸들러 (최적화 버전)"""
-    __slots__ = ('core', 'toggle_key', 'blocked', 'shift_map', 
-                 'force_quit_keys', 'pressed_force_quit')
+    """키보드 이벤트 핸들러 (메모리 최적화)"""
+    __slots__ = ('core', 'toggle_key', 'blocked', 'force_quit_keys', 'pressed_force_quit')
+    
+    # Shift 맵 (클래스 변수로 메모리 절약)
+    SHIFT_MAP = {
+        '!': '1', '@': '2', '#': '3', '$': '4', '%': '5', '^': '6', 
+        '&': '7', '*': '8', '(': '9', ')': '0', '~': '`',
+        'A': 'a', 'B': 'b', 'C': 'c', 'D': 'd', 'E': 'e', 'F': 'f',
+        'G': 'g', 'H': 'h', 'I': 'i', 'J': 'j', 'K': 'k', 'L': 'l',
+        'M': 'm', 'N': 'n', 'O': 'o', 'P': 'p', 'Q': 'q', 'R': 'r',
+        'S': 's', 'T': 't', 'U': 'u', 'V': 'v', 'W': 'w', 'X': 'x',
+        'Y': 'y', 'Z': 'z'
+    }
     
     def __init__(self, core, toggle_key='`', force_quit_keys=None):
         self.core = core
         self.toggle_key = toggle_key
         self.blocked = set()
-        
-        # 강제 종료 키 조합
         self.force_quit_keys = set(force_quit_keys or ['alt', 'shift', 'delete'])
         self.pressed_force_quit = set()
-        
-        # Shift 맵 (캐싱을 위한 frozenset)
-        self.shift_map = {
-            '!': '1', '@': '2', '#': '3', '$': '4', '%': '5', '^': '6', 
-            '&': '7', '*': '8', '(': '9', ')': '0', '~': '`',
-            'A': 'a', 'B': 'b', 'C': 'c', 'D': 'd', 'E': 'e', 'F': 'f',
-            'G': 'g', 'H': 'h', 'I': 'i', 'J': 'j', 'K': 'k', 'L': 'l',
-            'M': 'm', 'N': 'n', 'O': 'o', 'P': 'p', 'Q': 'q', 'R': 'r',
-            'S': 's', 'T': 't', 'U': 'u', 'V': 'v', 'W': 'w', 'X': 'x',
-            'Y': 'y', 'Z': 'z'
-        }
     
     def get_base_key(self, event):
-        """Shift 조합 제거 (최적화)"""
-        return self.shift_map.get(event.name, event.name)
+        """Shift 조합 제거"""
+        return self.SHIFT_MAP.get(event.name, event.name)
     
     def check_force_quit(self):
-        """강제 종료 키 조합 확인"""
+        """강제 종료 확인"""
         return self.pressed_force_quit >= self.force_quit_keys
     
     def handle_press(self, event):
-        """키 눌림 처리 (최적화)"""
+        """키 눌림"""
         key = self.get_base_key(event)
         
-        # 강제 종료 키 체크
+        # 강제 종료 체크
         if key in self.force_quit_keys:
             self.pressed_force_quit.add(key)
             if self.check_force_quit():
-                print("강제 종료 키 조합 감지 - 프로그램 종료 중...")
+                print("강제 종료 중...")
                 self.shutdown()
                 return False
         
@@ -52,20 +48,20 @@ class EventHandler:
             self.core.toggle_macro()
             return False
         
-        # 매크로 비활성화 시 조기 종료
+        # 비활성 상태 조기 종료
         if not self.core.macro_enabled or key not in self.core.macros:
             return True
         
-        # 다른 매크로가 이 키를 실행 중이면 트리거만 차단
+        # 다른 매크로가 실행 중
         if self.core.should_block_trigger(key):
             return True
         
-        # 이미 차단 중이면 무시
+        # 차단 중
         if key in self.blocked:
             return False
         
-        # 사용자가 직접 누른 경우 체크
-        if key in self.core.user_trigger_keys:
+        # 사용자가 이미 누름
+        if key in self.core.user_triggers:
             return False
         
         # mode 2 중복 방지
@@ -79,8 +75,8 @@ class EventHandler:
         if key in self.core.pressed_keys:
             return False
         
-        # 사용자가 직접 누른 트리거로 표시
-        self.core.user_trigger_keys.add(key)
+        # 사용자 트리거 등록
+        self.core.user_triggers.add(key)
         self.blocked.add(key)
         self.core.pressed_keys.add(key)
         self.core.start(key)
@@ -88,7 +84,7 @@ class EventHandler:
         return False
     
     def handle_release(self, event):
-        """키 떼기 처리 (최적화)"""
+        """키 떼기"""
         key = self.get_base_key(event)
         
         # 강제 종료 키 해제
@@ -99,20 +95,19 @@ class EventHandler:
         if key == self.toggle_key:
             return False
         
-        # 매크로 비활성화 시 조기 종료
+        # 비활성 상태 조기 종료
         if not self.core.macro_enabled or key not in self.core.macros:
             return True
         
-        # 다른 매크로가 이 키를 실행 중이면 release도 통과
+        # 다른 매크로가 실행 중
         if self.core.should_block_trigger(key):
             return True
         
-        # 사용자가 직접 누른 키만 처리
-        if key not in self.core.user_trigger_keys:
+        # 사용자가 누른 키만 처리
+        if key not in self.core.user_triggers:
             return False
         
-        # 사용자 트리거 기록 제거
-        self.core.user_trigger_keys.discard(key)
+        self.core.user_triggers.discard(key)
         self.core.pressed_keys.discard(key)
         
         mode = self.core.macros[key]['mode']
@@ -122,13 +117,13 @@ class EventHandler:
             self.core.stop(key)
             self.blocked.discard(key)
         elif mode == 2:
-            # mode 2: 지연 후 차단 해제 (최적화된 방식)
+            # mode 2: 지연 후 차단 해제
             threading.Timer(0.05, lambda: self.blocked.discard(key)).start()
         
         return False
     
     def shutdown(self):
-        """종료 (최적화)"""
+        """종료"""
         self.core.stop_signal.set()
         try:
             import keyboard
