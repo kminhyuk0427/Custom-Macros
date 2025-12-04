@@ -29,72 +29,47 @@ class MacroApp:
         
         for trigger, info in raw_macros.items():
             if isinstance(trigger, tuple):
+                # 튜플 트리거를 각 키로 분리
                 for key in trigger:
-                    normalized[key] = info.copy()
+                    normalized[key] = info  # 복사 없이 참조만
             else:
-                normalized[trigger] = info.copy()
+                normalized[trigger] = info
         
         return normalized
     
-    def _parse_action(self, action, is_last):
-        """action을 (hold, key, delay) 형식으로 변환
-        
-        입력:
-            ('key',)              → (기본홀드, 'key', 마지막이면 0 아니면 기본딜레이)
-            ('key', delay)        → (기본홀드, 'key', delay)
-            (hold, 'key')         → (hold, 'key', 마지막이면 0 아니면 기본딜레이)
-            (hold, 'key', delay)  → (hold, 'key', delay)
-        """
+    def _parse_action(self, action, is_last, defaults):
+        """action을 (hold, key, delay) 형식으로 변환"""
         action_len = len(action)
         
         if action_len == 1:
             # ('key',)
-            return (None, action[0], 0 if is_last else None)
+            return (defaults['press'], action[0], 0 if is_last else defaults['release'])
         
         elif action_len == 2:
             # 첫 번째가 숫자면 (hold, 'key'), 문자열이면 ('key', delay)
             if isinstance(action[0], (int, float)):
-                # (hold, 'key')
-                hold = action[0]
-                key = action[1]
-                delay = 0 if is_last else None
-                return (hold, key, delay)
+                return (action[0], action[1], 0 if is_last else defaults['release'])
             else:
-                # ('key', delay)
-                key = action[0]
-                delay = action[1] if action[1] is not None else (0 if is_last else None)
-                return (None, key, delay)
+                return (defaults['press'], action[0], action[1] if action[1] is not None else (0 if is_last else defaults['release']))
         
-        elif action_len == 3:
-            # (hold, 'key', delay)
-            hold = action[0]
-            key = action[1]
-            delay = action[2] if action[2] is not None else (0 if is_last else None)
-            return (hold, key, delay)
-        
-        else:
-            raise ValueError(f"잘못된 action 형식: {action}")
+        else:  # action_len == 3
+            # (hold, key, delay)
+            return (
+                action[0] if action[0] is not None else defaults['press'],
+                action[1],
+                action[2] if action[2] is not None else (0 if is_last else defaults['release'])
+            )
     
     def _convert_actions(self, macros, defaults):
         """actions를 (hold, key, delay) 튜플 리스트로 변환"""
         converted = {}
         
         for key, info in macros.items():
-            if 'actions' not in info:
-                raise ValueError(f"매크로 '{key}': 'actions' 필드 필요")
-            
             raw_actions = info['actions']
-            parsed_actions = []
-            
-            for i, action in enumerate(raw_actions):
-                is_last = (i == len(raw_actions) - 1)
-                hold, key_name, delay = self._parse_action(action, is_last)
-                
-                # None을 기본값으로 치환
-                hold = hold if hold is not None else defaults['press']
-                delay = delay if delay is not None else defaults['release']
-                
-                parsed_actions.append((hold, key_name, delay))
+            parsed_actions = [
+                self._parse_action(action, i == len(raw_actions) - 1, defaults)
+                for i, action in enumerate(raw_actions)
+            ]
             
             converted[key] = {
                 'actions': parsed_actions,
@@ -154,6 +129,7 @@ class MacroApp:
     
     def validate_config(self, cfg):
         """설정 검증"""
+        # 필수 속성 체크
         required = ['MACROS', 'TOGGLE_KEY', 'KEY_PRESS_DURATION', 
                    'KEY_RELEASE_DURATION', 'SEQUENCE_DELAY']
         
@@ -162,34 +138,22 @@ class MacroApp:
             print(f"[오류] config.py에 필수 속성 누락: {', '.join(missing)}")
             return False
         
+        # MACROS 검증
         if not isinstance(cfg.MACROS, dict) or not cfg.MACROS:
             print("[오류] MACROS가 비어있거나 올바르지 않습니다.")
             return False
         
-        # 각 매크로 검증
+        # 각 매크로 검증 (간소화)
         for trigger, info in cfg.MACROS.items():
-            # 트리거 형식
-            if isinstance(trigger, tuple):
-                trigger_str = f"({', '.join(trigger)})"
-                if not all(isinstance(k, str) for k in trigger):
-                    print(f"[오류] {trigger_str}: 트리거는 문자열이어야 함")
-                    return False
-            elif not isinstance(trigger, str):
-                print(f"[오류] '{trigger}': 트리거는 문자열 또는 튜플이어야 함")
-                return False
-            else:
-                trigger_str = f"'{trigger}'"
+            trigger_str = f"({', '.join(trigger)})" if isinstance(trigger, tuple) else f"'{trigger}'"
             
+            # 기본 구조 체크
             if not isinstance(info, dict):
                 print(f"[오류] {trigger_str}: 딕셔너리 형식 필요")
                 return False
             
             # mode 체크
-            if 'mode' not in info:
-                print(f"[오류] {trigger_str}: 'mode' 필드 누락")
-                return False
-            
-            if info['mode'] not in [0, 1, 2]:
+            if 'mode' not in info or info['mode'] not in [0, 1, 2]:
                 print(f"[오류] {trigger_str}: mode는 0, 1, 2 중 하나")
                 return False
             
@@ -203,51 +167,15 @@ class MacroApp:
                 print(f"[오류] {trigger_str}: actions는 비어있지 않은 리스트")
                 return False
             
+            # action 형식 간단 체크
             for i, action in enumerate(actions):
-                if not isinstance(action, tuple) or len(action) < 1 or len(action) > 3:
+                if not isinstance(action, tuple) or not (1 <= len(action) <= 3):
                     print(f"[오류] {trigger_str}: action[{i}]는 1~3개 값의 튜플")
                     return False
-                
-                # 2개 값: (hold, 'key') 또는 ('key', delay)
-                if len(action) == 2:
-                    first, second = action
-                    
-                    # (hold, 'key') 형식
-                    if isinstance(first, (int, float)):
-                        if not isinstance(second, str):
-                            print(f"[오류] {trigger_str}: action[{i}] (hold, 'key') 형식에서 key는 문자열")
-                            return False
-                        if first < 0:
-                            print(f"[오류] {trigger_str}: action[{i}] hold는 0 이상")
-                            return False
-                    
-                    # ('key', delay) 형식
-                    else:
-                        if not isinstance(first, str):
-                            print(f"[오류] {trigger_str}: action[{i}] key는 문자열")
-                            return False
-                        if second is not None and (not isinstance(second, (int, float)) or second < 0):
-                            print(f"[오류] {trigger_str}: action[{i}] delay는 None 또는 0 이상")
-                            return False
-                
-                # 3개 값: (hold, 'key', delay)
-                elif len(action) == 3:
-                    hold, key, delay = action
-                    if not isinstance(key, str):
-                        print(f"[오류] {trigger_str}: action[{i}] 키는 문자열")
-                        return False
-                    if hold is not None and (not isinstance(hold, (int, float)) or hold < 0):
-                        print(f"[오류] {trigger_str}: action[{i}] hold는 None 또는 0 이상")
-                        return False
-                    if delay is not None and (not isinstance(delay, (int, float)) or delay < 0):
-                        print(f"[오류] {trigger_str}: action[{i}] delay는 None 또는 0 이상")
-                        return False
         
         # 타이밍 검증
-        timing_attrs = ['KEY_PRESS_DURATION', 'KEY_RELEASE_DURATION', 'SEQUENCE_DELAY']
-        for attr in timing_attrs:
-            val = getattr(cfg, attr, -1)
-            if val < 0:
+        for attr in ['KEY_PRESS_DURATION', 'KEY_RELEASE_DURATION', 'SEQUENCE_DELAY']:
+            if getattr(cfg, attr, -1) < 0:
                 print(f"[오류] {attr}는 0 이상이어야 함")
                 return False
         

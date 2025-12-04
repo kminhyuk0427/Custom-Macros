@@ -1,11 +1,10 @@
-import threading
 import os
 
 class EventHandler:
-    """키보드 이벤트 핸들러 (메모리 최적화)"""
+    """키보드 이벤트 핸들러"""
     __slots__ = ('core', 'toggle_key', 'blocked', 'force_quit_keys', 'pressed_force_quit')
     
-    # Shift 맵 (클래스 변수로 메모리 절약)
+    # Shift 맵
     SHIFT_MAP = {
         '!': '1', '@': '2', '#': '3', '$': '4', '%': '5', '^': '6', 
         '&': '7', '*': '8', '(': '9', ')': '0', '~': '`',
@@ -23,59 +22,51 @@ class EventHandler:
         self.force_quit_keys = set(force_quit_keys or ['alt', 'shift', 'delete'])
         self.pressed_force_quit = set()
     
-    def get_base_key(self, event):
-        """Shift 조합 제거"""
-        return self.SHIFT_MAP.get(event.name, event.name)
-    
-    def check_force_quit(self):
-        """강제 종료 확인"""
-        return self.pressed_force_quit >= self.force_quit_keys
-    
     def handle_press(self, event):
         """키 눌림"""
-        key = self.get_base_key(event)
+        key = self.SHIFT_MAP.get(event.name, event.name)
         
-        # 강제 종료 체크
+        # 1. 강제 종료 체크 (최우선)
         if key in self.force_quit_keys:
             self.pressed_force_quit.add(key)
-            if self.check_force_quit():
+            if self.pressed_force_quit >= self.force_quit_keys:
                 print("강제 종료 중...")
                 self.shutdown()
                 return False
         
-        # 토글 키
+        # 2. 토글 키
         if key == self.toggle_key:
             self.core.toggle_macro()
             return False
         
-        # 비활성 상태 조기 종료
+        # 3. 매크로 비활성 또는 미등록 키
         if not self.core.macro_enabled or key not in self.core.macros:
             return True
         
-        # 다른 매크로가 실행 중
-        if self.core.should_block_trigger(key):
+        # 4. 실행 중인 매크로 차단
+        if key in self.core.executing_keys:
             return True
         
-        # 차단 중
+        # 5. 이미 차단된 키
         if key in self.blocked:
             return False
         
-        # 사용자가 이미 누름
+        # 6. 사용자가 이미 누른 키
         if key in self.core.user_triggers:
             return False
         
-        # mode 2 중복 방지
+        # 7. mode 2 중복 실행 방지
         info = self.core.macros[key]
         if info['mode'] == 2:
             event_obj = self.core.mode2_events.get(key)
             if event_obj and not event_obj.is_set():
                 return False
         
-        # 중복 누름 방지
+        # 8. 중복 누름 방지
         if key in self.core.pressed_keys:
             return False
         
-        # 사용자 트리거 등록
+        # 9. 매크로 시작
         self.core.user_triggers.add(key)
         self.blocked.add(key)
         self.core.pressed_keys.add(key)
@@ -85,46 +76,56 @@ class EventHandler:
     
     def handle_release(self, event):
         """키 떼기"""
-        key = self.get_base_key(event)
+        key = self.SHIFT_MAP.get(event.name, event.name)
         
-        # 강제 종료 키 해제
+        # 1. 강제 종료 키 해제
         if key in self.force_quit_keys:
             self.pressed_force_quit.discard(key)
         
-        # 토글 키
+        # 2. 토글 키
         if key == self.toggle_key:
             return False
         
-        # 비활성 상태 조기 종료
+        # 3. 매크로 비활성 또는 미등록 키
         if not self.core.macro_enabled or key not in self.core.macros:
             return True
         
-        # 다른 매크로가 실행 중
-        if self.core.should_block_trigger(key):
+        # 4. 실행 중인 매크로 차단
+        if key in self.core.executing_keys:
             return True
         
-        # 사용자가 누른 키만 처리
+        # 5. 사용자가 누른 키가 아님
         if key not in self.core.user_triggers:
             return False
         
+        # 6. 상태 정리
         self.core.user_triggers.discard(key)
         self.core.pressed_keys.discard(key)
         
         mode = self.core.macros[key]['mode']
         
         if mode == 1:
-            # mode 1: 즉시 중단
+            # mode 1: 즉시 중단 및 차단 해제
             self.core.stop(key)
             self.blocked.discard(key)
-        elif mode == 2:
-            # mode 2: 지연 후 차단 해제
-            threading.Timer(0.05, lambda: self.blocked.discard(key)).start()
+        else:
+            # mode 2: 50ms 후 차단 해제 (Timer 제거, 직접 호출)
+            import threading
+            threading.Timer(0.05, self.blocked.discard, args=(key,)).start()
         
         return False
     
     def shutdown(self):
         """종료"""
         self.core.stop_signal.set()
+        
+        # 모든 타이머 취소
+        for timer in list(self.core._cleanup_timers.values()):
+            try:
+                timer.cancel()
+            except:
+                pass
+        
         try:
             import keyboard
             keyboard.unhook_all()

@@ -129,12 +129,15 @@ if %errorlevel% neq 0 (
     echo.
     echo Automatic Installation:
     echo    1. Check your internet connection
-    echo    2. Run CMD in Windows
-    echo    3. Go to the location of the build.bat file in CMD
-    echo       (example, cd C:\Users\me\Desktop\Custom-Macros)
-    echo    2. Execute the command: python -m pip install -r requirements.txt
     echo.
-    echo    3. If you see errors, try:
+    echo    2. Run CMD in Windows
+    echo.
+    echo    3. Go to the location of the build.bat file in CMD
+    echo       example, cd C:\Users\me\Desktop\Custom-Macros
+    echo.
+    echo    4. Execute the command: python -m pip install -r requirements.txt
+    echo.
+    echo    5. If you see errors, try:
     echo       python -m pip install --upgrade pip
     echo       python -m pip install -r requirements.txt
     echo.
@@ -328,7 +331,7 @@ REM Step 6: Start Build Process
 REM ========================================
 echo [6/6] Building executable...
 echo.
-echo This may take 1-2 minutes, please wait...
+echo 1 minutes, please wait...
 echo.
 
 REM Execute build

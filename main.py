@@ -33,7 +33,7 @@ def main():
         sys.exit(0)
         
     except ImportError as e:
-        print(f"\n[오류] 필수 모듈을 가져올 수 없습니다.: {e}")
+        print(f"\n[오류] 필수 모듈을 가져올 수 없습니다: {e}")
         print("requirements.txt의 패키지들이 설치되어 있는지 확인하세요.")
         input("Press Enter to exit...")
         sys.exit(1)
