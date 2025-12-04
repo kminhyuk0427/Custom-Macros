@@ -4,15 +4,32 @@ class EventHandler:
     """키보드 이벤트 핸들러"""
     __slots__ = ('core', 'toggle_key', 'blocked', 'force_quit_keys', 'pressed_force_quit')
     
-    # Shift 맵
+    # Shift 키 매핑 (중복 제거)
     SHIFT_MAP = {
-        '!': '1', '@': '2', '#': '3', '$': '4', '%': '5', '^': '6', 
-        '&': '7', '*': '8', '(': '9', ')': '0', '~': '`',
+        # 숫자 키 Shift
+        '!': '1', '@': '2', '#': '3', '$': '4', '%': '5',
+        '^': '6', '&': '7', '*': '8', '(': '9', ')': '0',
+        
+        # 기호 키 Shift
+        '~': '`', '_': '-', '+': '=', '{': '[', '}': ']',
+        '|': '\\', ':': ';', '"': "'", '<': ',', '>': '.', '?': '/',
+        
+        # 대문자 -> 소문자
         'A': 'a', 'B': 'b', 'C': 'c', 'D': 'd', 'E': 'e', 'F': 'f',
         'G': 'g', 'H': 'h', 'I': 'i', 'J': 'j', 'K': 'k', 'L': 'l',
         'M': 'm', 'N': 'n', 'O': 'o', 'P': 'p', 'Q': 'q', 'R': 'r',
         'S': 's', 'T': 't', 'U': 'u', 'V': 'v', 'W': 'w', 'X': 'x',
-        'Y': 'y', 'Z': 'z'
+        'Y': 'y', 'Z': 'z',
+    }
+    
+    # 넘버패드 키 매핑
+    NUMPAD_MAP = {
+        'keypad 0': 'num0', 'keypad 1': 'num1', 'keypad 2': 'num2',
+        'keypad 3': 'num3', 'keypad 4': 'num4', 'keypad 5': 'num5',
+        'keypad 6': 'num6', 'keypad 7': 'num7', 'keypad 8': 'num8',
+        'keypad 9': 'num9', 'keypad /': 'num/', 'keypad *': 'num*',
+        'keypad -': 'num-', 'keypad +': 'num+', 'keypad .': 'num.',
+        'keypad enter': 'numenter',
     }
     
     def __init__(self, core, toggle_key='`', force_quit_keys=None):
@@ -22,11 +39,26 @@ class EventHandler:
         self.force_quit_keys = set(force_quit_keys or ['alt', 'shift', 'delete'])
         self.pressed_force_quit = set()
     
+    def _normalize_key(self, key_name):
+        """키 이름 정규화 (간소화)"""
+        # 1. 넘버패드 체크
+        numpad = self.NUMPAD_MAP.get(key_name)
+        if numpad:
+            return numpad
+        
+        # 2. Shift 변환 체크
+        shift = self.SHIFT_MAP.get(key_name)
+        if shift:
+            return shift
+        
+        # 3. 그대로 반환
+        return key_name
+    
     def handle_press(self, event):
         """키 눌림"""
-        key = self.SHIFT_MAP.get(event.name, event.name)
+        key = self._normalize_key(event.name)
         
-        # 1. 강제 종료 체크 (최우선)
+        # 1. 강제 종료 체크
         if key in self.force_quit_keys:
             self.pressed_force_quit.add(key)
             if self.pressed_force_quit >= self.force_quit_keys:
@@ -62,7 +94,7 @@ class EventHandler:
             if event_obj and not event_obj.is_set():
                 return False
         
-        # 8. 중복 누름 방지
+        # 8. 중복 눌림 방지
         if key in self.core.pressed_keys:
             return False
         
@@ -76,7 +108,7 @@ class EventHandler:
     
     def handle_release(self, event):
         """키 떼기"""
-        key = self.SHIFT_MAP.get(event.name, event.name)
+        key = self._normalize_key(event.name)
         
         # 1. 강제 종료 키 해제
         if key in self.force_quit_keys:
@@ -109,7 +141,7 @@ class EventHandler:
             self.core.stop(key)
             self.blocked.discard(key)
         else:
-            # mode 2: 50ms 후 차단 해제 (Timer 제거, 직접 호출)
+            # mode 2: 50ms 후 차단 해제
             import threading
             threading.Timer(0.05, self.blocked.discard, args=(key,)).start()
         

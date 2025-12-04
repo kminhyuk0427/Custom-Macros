@@ -27,21 +27,63 @@ SendInput = windll.user32.SendInput
 
 # 스캔코드 맵
 SCANCODE_MAP = {
-    '0': 0x0B, '1': 0x02, '2': 0x03, '3': 0x04, '4': 0x05, '5': 0x06, 
-    '6': 0x07, '7': 0x08, '8': 0x09, '9': 0x0A,
-    'q': 0x10, 'w': 0x11, 'e': 0x12, 'r': 0x13, 't': 0x14, 'y': 0x15, 
-    'u': 0x16, 'i': 0x17, 'o': 0x18, 'p': 0x19,
-    'a': 0x1E, 's': 0x1F, 'd': 0x20, 'f': 0x21, 'g': 0x22, 'h': 0x23, 
-    'j': 0x24, 'k': 0x25, 'l': 0x26,
-    'z': 0x2C, 'x': 0x2D, 'c': 0x2E, 'v': 0x2F, 'b': 0x30, 'n': 0x31, 'm': 0x32,
+    # 숫자
+    '0': 0x0B, '1': 0x02, '2': 0x03, '3': 0x04, '4': 0x05,
+    '5': 0x06, '6': 0x07, '7': 0x08, '8': 0x09, '9': 0x0A,
+    
+    # 알파벳
+    'q': 0x10, 'w': 0x11, 'e': 0x12, 'r': 0x13, 't': 0x14,
+    'y': 0x15, 'u': 0x16, 'i': 0x17, 'o': 0x18, 'p': 0x19,
+    'a': 0x1E, 's': 0x1F, 'd': 0x20, 'f': 0x21, 'g': 0x22,
+    'h': 0x23, 'j': 0x24, 'k': 0x25, 'l': 0x26,
+    'z': 0x2C, 'x': 0x2D, 'c': 0x2E, 'v': 0x2F, 'b': 0x30,
+    'n': 0x31, 'm': 0x32,
+    
+    # 방향키
     'up': 0xC8, 'down': 0xD0, 'left': 0xCB, 'right': 0xCD,
-    'space': 0x39, 'enter': 0x1C, 'shift': 0x2A, 'ctrl': 0x1D, 'alt': 0x38, 
-    'tab': 0x0F, 'esc': 0x01, 'backspace': 0x0E, 'delete': 0xD3,
-    'f1': 0x3B, 'f2': 0x3C, 'f3': 0x3D, 'f4': 0x3E, 'f5': 0x3F, 'f6': 0x40, 
-    'f7': 0x41, 'f8': 0x42, 'f9': 0x43, 'f10': 0x44, 'f11': 0x57, 'f12': 0x58,
+    
+    # 특수키
+    'space': 0x39, 'enter': 0x1C, 'shift': 0x2A, 'ctrl': 0x1D,
+    'alt': 0x38, 'tab': 0x0F, 'esc': 0x01, 'backspace': 0x0E,
+    'delete': 0xD3, 'insert': 0xD2, 'home': 0xC7, 'end': 0xCF,
+    'pageup': 0xC9, 'pagedown': 0xD1,
+    
+    # 기능키
+    'f1': 0x3B, 'f2': 0x3C, 'f3': 0x3D, 'f4': 0x3E,
+    'f5': 0x3F, 'f6': 0x40, 'f7': 0x41, 'f8': 0x42,
+    'f9': 0x43, 'f10': 0x44, 'f11': 0x57, 'f12': 0x58,
+    
+    # 락 키
+    'capslock': 0x3A, 'numlock': 0x45, 'scrolllock': 0x46,
+    'printscreen': 0xB7, 'pause': 0xC5,
+    
+    # 기호
+    '-': 0x0C, '=': 0x0D, '[': 0x1A, ']': 0x1B,
+    ';': 0x27, "'": 0x28, '`': 0x29, '\\': 0x2B,
+    ',': 0x33, '.': 0x34, '/': 0x35,
+    
+    # 넘버패드
+    'num0': 0x52, 'num1': 0x4F, 'num2': 0x50, 'num3': 0x51,
+    'num4': 0x4B, 'num5': 0x4C, 'num6': 0x4D, 'num7': 0x47,
+    'num8': 0x48, 'num9': 0x49,
+    'num/': 0xB5, 'num*': 0x37, 'num-': 0x4A, 'num+': 0x4E,
+    'num.': 0x53, 'numenter': 0x9C,
+    
+    # 윈도우 키
+    'win': 0xDB, 'rightwin': 0xDC, 'menu': 0xDD,
+    
+    # 확장 컨트롤 키
+    'rightshift': 0x36, 'rightctrl': 0x9D, 'rightalt': 0xB8,
 }
 
-EXTENDED_KEYS = frozenset({'up', 'down', 'left', 'right', 'delete'})
+# Extended 키
+EXTENDED_KEYS = frozenset({
+    'up', 'down', 'left', 'right',
+    'delete', 'insert', 'home', 'end', 'pageup', 'pagedown',
+    'num/', 'numenter', 'rightctrl', 'rightalt', 'rightshift',
+    'win', 'rightwin', 'menu', 'printscreen'
+})
+
 KEYEVENTF_SCANCODE = 0x0008
 KEYEVENTF_KEYUP = 0x0002
 KEYEVENTF_EXTENDEDKEY = 0x0001
@@ -91,7 +133,7 @@ class MacroCore:
         return self.macro_enabled
     
     def _send_input(self, scan_code, is_extended, is_keyup):
-        """DirectInput 전송"""
+        """DirectInput 전송 (캐싱 적용)"""
         flags = KEYEVENTF_SCANCODE | (KEYEVENTF_EXTENDEDKEY if is_extended else 0) | (KEYEVENTF_KEYUP if is_keyup else 0)
         
         cache_key = (scan_code, flags)
@@ -103,39 +145,35 @@ class MacroCore:
         SendInput(1, ctypes.pointer(self._input_cache[cache_key]), ctypes.sizeof(Input))
     
     def _interruptible_sleep(self, duration, trigger_key):
-        """중단 가능한 sleep"""
+        """중단 가능한 sleep (mode 1 전용)"""
         if duration <= 0:
             return True
         
         end_time = time.perf_counter() + duration
         while time.perf_counter() < end_time:
-            # 조기 종료 체크
             if trigger_key not in self.pressed_keys or not self.macro_enabled:
                 return False
             time.sleep(0.005)
-        
         return True
     
     def _execute_key(self, key, trigger_key, hold, delay, mode):
-        """단일 키 실행 - 간소화"""
-        key_lower = key.lower()
-        
-        # 트리거 키는 스킵 (딜레이만 처리)
-        if key_lower == trigger_key:
+        """단일 키 실행"""
+        # 트리거 키는 딜레이만 처리
+        if key == trigger_key:
             if delay > 0:
                 return self._interruptible_sleep(delay, trigger_key) if mode == 1 else (time.sleep(delay) or True)
             return True
         
-        scan_code = SCANCODE_MAP.get(key_lower)
+        scan_code = SCANCODE_MAP.get(key)
         if scan_code is None:
             return True
         
-        is_extended = key_lower in EXTENDED_KEYS
-        is_macro_trigger = key_lower in self.macros
+        is_extended = key in EXTENDED_KEYS
+        is_macro_trigger = key in self.macros
         
         # 매크로 트리거면 실행 목록 추가
         if is_macro_trigger:
-            self.executing_keys.add(key_lower)
+            self.executing_keys.add(key)
         
         try:
             # 키 누름
@@ -149,7 +187,7 @@ class MacroCore:
             else:
                 time.sleep(hold)
             
-            # 키 떼기
+            # 키 뗌
             self._send_input(scan_code, is_extended, True)
             
             # delay 대기
@@ -163,13 +201,13 @@ class MacroCore:
         
         finally:
             if is_macro_trigger:
-                # 비동기 정리 - Timer 대신 직접 스케줄링
-                timer = threading.Timer(0.15, self._cleanup_executing_key, args=(key_lower,))
-                self._cleanup_timers[key_lower] = timer
+                # 비동기 정리
+                timer = threading.Timer(0.15, self._cleanup_executing_key, args=(key,))
+                self._cleanup_timers[key] = timer
                 timer.start()
     
     def _cleanup_executing_key(self, key):
-        """실행 키 정리 - 메모리 누수 방지"""
+        """실행 키 정리"""
         self.executing_keys.discard(key)
         self._cleanup_timers.pop(key, None)
     
@@ -191,14 +229,11 @@ class MacroCore:
         try:
             while not self.stop_signal.is_set() and self.macro_enabled and trigger in self.pressed_keys:
                 for hold, key, delay in actions:
-                    # 빠른 중단 체크
                     if trigger not in self.pressed_keys:
                         return
-                    
                     if not self._execute_key(key, trigger, hold, delay, 1):
                         return
                 
-                # 시퀀스 간 딜레이
                 if not self._interruptible_sleep(self.timings['sequence'], trigger):
                     return
         finally:
@@ -206,7 +241,7 @@ class MacroCore:
             self.current_macro = None
     
     def start(self, trigger):
-        """매크로 시작 - 조기 종료 패턴"""
+        """매크로 시작"""
         if not self.macro_enabled:
             return False
         
