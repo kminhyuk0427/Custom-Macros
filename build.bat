@@ -128,9 +128,11 @@ if %errorlevel% neq 0 (
     echo ========================================
     echo.
     echo Automatic Installation:
-    echo    1. Make sure you have internet connection
-    echo    2. Run this command:
-    echo       python -m pip install -r requirements.txt
+    echo    1. Check your internet connection
+    echo    2. Run CMD in Windows
+    echo    3. Go to the location of the build.bat file in CMD
+    echo       (example, cd C:\Users\me\Desktop\Custom-Macros)
+    echo    2. Execute the command: python -m pip install -r requirements.txt
     echo.
     echo    3. If you see errors, try:
     echo       python -m pip install --upgrade pip
@@ -436,27 +438,12 @@ if exist dist\KeyM.exe (
     echo    - Add KeyM.exe to antivirus exclusions
     echo.
     echo Administrator Rights:
-    echo    - KeyM requires admin privileges
     echo    - Windows will ask for permission
     echo    - Click "Yes" when prompted
     echo.
     echo After Config Changes:
     echo    - If you edit config.py
     echo    - You must rebuild KeyM.exe
-    echo    - Close KeyM first, then run build.bat
-    echo.
-    echo Testing:
-    echo    - Run your game first
-    echo    - Then start KeyM.exe
-    echo    - Test macros to verify settings
-    echo.
-    echo Force Quit:
-    echo    - Press ALT + SHIFT + DEL to exit
-    echo    - Or right-click tray icon ^> Exit
-    echo.
-    echo Rebuild Instructions:
-    echo    1. Close KeyM.exe completely
-    echo    2. Run build.bat again
     echo ========================================
     
 ) else (
