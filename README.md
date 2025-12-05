@@ -29,7 +29,7 @@
 ##  실행법
 
 ### 1. 패키지 설치
-Custom-Macros-master폴더 안에서 아래의 명령어를 실행합니다
+  Custom-Macros-master폴더 안에서 아래의 명령어를 실행합니다
 ```bash
 pip install -r requirements.txt
 ```
